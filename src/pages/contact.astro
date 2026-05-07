@@ -1,0 +1,718 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+
+const metadata = {
+  title: 'Preisübersicht & Buchungsanfrage',
+};
+
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+const minDate = tomorrow.toISOString().split('T')[0];
+
+// %%%BOOKING_CONDITIONS_DE_START%%%
+// BFW-491: service-derived items (Babybett, Haustiere, Kurtaxe…) moved to the per-apartment
+// price-overview block above the Konditionen cards. Only globally applicable conditions remain here.
+const terms = [
+  { title: 'Anzahlung', description: '20% nach Buchungsbestätigung. Restzahlung 2 Tage vor Anreise.' },
+  { title: 'Stornierung', description: 'Kostenlos bis 1 Tag vor Anreise. Danach 100% des Preises.' },
+  { title: 'Check-in', description: '16:00 – 22:00 Uhr (andere Zeiten nach Absprache)' },
+  { title: 'Check-out', description: '07:00 – 11:00 Uhr (andere Zeiten nach Absprache)' },
+  { title: 'Schlüsselübergabe', description: 'Per Schlüsselbox. Code wird vor Anreise mitgeteilt.' },
+  { title: 'Parken', description: 'Kostenlos' },
+];
+// %%%BOOKING_CONDITIONS_DE_END%%%
+---
+
+<!-- BFW-351: same window globals the calendar widget reads. -->
+<script is:inline define:vars={{ tenantSlug: '%%%TENANT_SLUG%%%', apiBase: '%%%PUBLIC_API_BASE_URL%%%' }}>
+  window.MFWS_TENANT_SLUG = tenantSlug;
+  window.MFWS_PUBLIC_API_BASE_URL = apiBase;
+</script>
+
+<Layout metadata={metadata}>
+  <HeroText tagline="Preisübersicht & Buchungsanfrage" title="Wir freuen uns auf Ihre Anfrage" />
+
+  <!-- Konditionen -->
+  <section class="py-12 md:py-16 bg-blue-50 dark:bg-slate-900">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+      <p class="text-center text-muted dark:text-slate-400 mb-8">
+        Schicken Sie Ihre unverbindliche Buchungsanfrage. Im Falle einer Buchung gelten die folgenden Konditionen.
+      </p>
+
+      <h3 class="text-2xl font-bold text-center mb-2 dark:text-white">Preisübersicht</h3>
+      <p class="text-sm text-center text-muted dark:text-slate-400 mb-6">Alle Preise inklusive gesetzlicher MwSt.</p>
+
+      <!-- BFW-491: per-apartment price overview (Variant B). Backend renders one card per apartment
+           with base price, surcharge (if any), and every additional service with its calculation type
+           and (Pflicht|optional) flag. -->
+      <div class="space-y-4 mb-6">
+        <!-- %%%PRICE_OVERVIEW_DE_START%%% -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h4 class="text-lg font-semibold mb-3 dark:text-white">Alpenpanorama</h4>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
+              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">60 €</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-default dark:text-slate-300">Aufschlag pro Zusatzperson</dt>
+              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">75 €</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
+          <h4 class="text-lg font-semibold mb-3 dark:text-white">Bergwiese</h4>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
+              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">45 €</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-default dark:text-slate-300">Aufschlag pro Zusatzperson</dt>
+              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">60 €</dd>
+            </div>
+          </dl>
+        </div>
+        <!-- %%%PRICE_OVERVIEW_DE_END%%% -->
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {terms.map((term) => (
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700">
+            <h4 class="font-semibold dark:text-white mb-1">{term.title}</h4>
+            <p class="text-sm text-muted dark:text-slate-400" set:html={term.description}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking Form -->
+  <section class="py-12 md:py-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
+      <h2 class="text-3xl font-bold text-center mb-8 dark:text-white">Anfrage senden</h2>
+
+      <div class="relative">
+        <div
+          id="success-message"
+          class="hidden bg-green-50 border border-green-200 text-green-800 p-6 rounded-lg"
+          role="status"
+        >
+          <h2 class="text-lg font-semibold mb-2">E-Mail-Bestätigung erforderlich</h2>
+          <p class="mb-3">
+            Vielen Dank! Wir haben eine Bestätigungs-E-Mail an
+            <strong id="success-guest-email" class="font-semibold"></strong> gesendet.
+            Bitte klicke innerhalb von 24 Stunden auf den Link in dieser E-Mail — erst dann leiten wir deine Anfrage an den Vermieter weiter.
+            Nichts erhalten? Bitte auch den Spam-Ordner prüfen.
+          </p>
+          <p class="text-sm">
+            Keine E-Mail erhalten?
+            <button
+              id="resend-doi-btn"
+              type="button"
+              class="text-primary font-medium underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            >Erneut senden</button>
+            <span id="resend-doi-success" class="hidden text-green-700 font-medium ml-1">Gesendet. Bitte Postfach prüfen.</span>
+            <span id="resend-doi-limit" class="hidden text-amber-700 font-medium ml-1">Bitte versuche es in einer Stunde erneut.</span>
+          </p>
+        </div>
+
+        <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-4">
+          <p id="error-text">Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.</p>
+        </div>
+
+        <form id="booking-form" class="space-y-5 bg-white dark:bg-slate-800 p-6 rounded-lg border border-gray-200 dark:border-slate-700">
+          <!-- BFW-492: form order is Wohnung → Gäste → Dates → Price → Kontakt → Nachricht → Pflicht-Checkboxen → Submit. -->
+          <div>
+            <label for="apartment" class="block text-sm font-medium mb-1 dark:text-white">Wohnung *</label>
+            <select id="apartment" name="apartment" required class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">Bitte wählen...</option>
+              <!-- %%%APARTMENT_OPTIONS_DE_START%%% -->
+              <option value="alpenpanorama">Alpenpanorama</option>
+              <option value="bergwiese">Bergwiese</option>
+              <!-- %%%APARTMENT_OPTIONS_DE_END%%% -->
+            </select>
+          </div>
+
+          <div>
+            <label for="guests" class="block text-sm font-medium mb-1 dark:text-white">Anzahl Gäste *</label>
+            <select id="guests" name="guests" required class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">Bitte wählen...</option>
+              <option value="1">1 Person</option>
+              <option value="2">2 Personen</option>
+              <option value="3">3 Personen</option>
+              <option value="4">4 Personen</option>
+            </select>
+          </div>
+
+          <!-- BFW-467/486: per-apartment additional services blocks (shown/hidden by JS on apartment change). -->
+          <!-- Backend renders one <div id="services-<slug>" class="hidden">…</div> per apartment, concatenated. -->
+          <!-- %%%ADDITIONAL_SERVICES_DE_START%%% -->
+          <div id="services-alpenpanorama" class="hidden">
+            <p class="block text-sm font-medium mb-2 dark:text-white">Zusatzleistungen</p>
+            <div class="bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-2">
+              <label class="flex items-start gap-2 py-2 border-b border-primary/10 last:border-b-0 cursor-pointer">
+                <input type="checkbox" checked disabled data-service-id="1" data-calc-type="ONCE" data-amount="30" class="mt-0.5 accent-primary service-checkbox" />
+                <span class="flex-1 text-sm text-default dark:text-white">Endreinigung <span class="text-xs text-muted italic">(Pflichtleistung)</span></span>
+                <span class="text-sm text-muted dark:text-slate-400 whitespace-nowrap">30 € (einmalig)</span>
+              </label>
+            </div>
+          </div>
+          <!-- %%%ADDITIONAL_SERVICES_DE_END%%% -->
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="arrival" class="block text-sm font-medium mb-1 dark:text-white">Anreise *</label>
+              <input type="date" id="arrival" name="arrival" required min={minDate} class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" />
+            </div>
+            <div>
+              <label for="departure" class="block text-sm font-medium mb-1 dark:text-white">Abreise *</label>
+              <input type="date" id="departure" name="departure" required min={minDate} class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" />
+            </div>
+          </div>
+          <p id="date-error" class="text-red-600 text-sm hidden"></p>
+          <div id="bfw-form-price" class="text-sm text-muted dark:text-slate-400 italic">Bitte Wohnung und Datum wählen</div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="name" class="block text-sm font-medium mb-1 dark:text-white">Name *</label>
+              <input type="text" id="name" name="name" required class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" />
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium mb-1 dark:text-white">E-Mail *</label>
+              <input type="email" id="email" name="email" required class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" />
+            </div>
+          </div>
+
+          <div>
+            <label for="phone" class="block text-sm font-medium mb-1 dark:text-white">Telefon</label>
+            <div class="flex gap-2">
+              <select id="countryCode" name="countryCode" class="shrink-0 px-2 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white text-sm focus:ring-2 focus:ring-primary">
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+43">🇦🇹 +43</option>
+                <option value="+41">🇨🇭 +41</option>
+                <option value="+31">🇳🇱 +31</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+1">🇺🇸 +1</option>
+              </select>
+              <input type="tel" id="phone" name="phone" placeholder="123 4567890" class="flex-1 min-w-0 px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary" />
+            </div>
+          </div>
+
+          <div>
+            <label for="message" class="block text-sm font-medium mb-1 dark:text-white">Nachricht</label>
+            <textarea id="message" name="message" rows="4" class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+          </div>
+
+          <div class="flex items-start gap-2">
+            <input type="checkbox" id="privacy" name="privacy" required class="mt-1" />
+            <label for="privacy" class="text-sm text-muted dark:text-slate-400">Ich stimme der Verarbeitung meiner Daten gemäß der <a href="/privacy" class="text-primary hover:underline">Datenschutzerklärung</a> zu. * Ich bin außerdem einverstanden, eine Bestätigungs-E-Mail an meine Adresse zu erhalten.</label>
+          </div>
+
+          <!-- BFW-492: AGB checkbox (only rendered when tenant has eigeneAgb=true and non-blank agbText). -->
+          <!-- The block is collapsed by WebsiteContentReplacer when the marker value is empty. -->
+          <!-- %%%AGB_CHECKBOX_DE_START%%% -->
+          <div class="flex items-start gap-2">
+            <input type="checkbox" id="agb" name="agb" required class="mt-1" />
+            <label for="agb" class="text-sm text-muted dark:text-slate-400">
+              Ich stimme den <a href="/agb" class="text-primary hover:underline">Allgemeinen Geschäftsbedingungen</a> zu. *
+            </label>
+          </div>
+          <!-- %%%AGB_CHECKBOX_DE_END%%% -->
+
+          <!-- BFW-351 honeypot: must stay empty. Real users never see / fill this. -->
+          <div aria-hidden="true" style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;">
+            <label for="website-url">Website</label>
+            <input type="text" id="website-url" name="website-url" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="rounded-lg bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 p-4 text-sm text-default dark:text-slate-200">
+            <p class="font-semibold mb-1">Unverbindliche Anfrage — keine verbindliche Buchung</p>
+            <p>Mit dem Klick auf „Anfrage senden" senden Sie eine unverbindliche Buchungsanfrage. Es entstehen für Sie keine Kosten und keine Buchungspflicht. Der Mietvertrag kommt erst zustande, wenn der Vermieter Ihre Anfrage ausdrücklich bestätigt.</p>
+          </div>
+
+          <div class="mt-6">
+            <button type="submit" id="submit-btn" class="btn btn-secondary font-semibold bg-secondary text-white border-secondary hover:bg-primary hover:border-primary px-8 py-3 rounded-full w-full">
+              Anfrage senden
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  declare global {
+    interface Window {
+      MFWS_TENANT_SLUG?: string;
+      MFWS_PUBLIC_API_BASE_URL?: string;
+    }
+  }
+
+  // BFW-374: module-level token storage so the resend button can reach it
+  // across the submit handler and the click handler.
+  let pendingResendToken: string | null = null;
+
+  // Re-bind on every Astro page-load (initial render + after each view transition swap).
+  // The previous version captured DOM refs once at module init; after a view transition
+  // the form was replaced and the listener never got attached to the new element, so the
+  // submit fell through to the browser's native GET to /contact?...
+  function initBookingForm() {
+    const form = document.getElementById('booking-form') as HTMLFormElement | null;
+    if (!form || form.dataset.mfwsBound === 'true') return;
+    form.dataset.mfwsBound = 'true';
+
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
+    const arrivalInput = document.getElementById('arrival') as HTMLInputElement | null;
+    const departureInput = document.getElementById('departure') as HTMLInputElement | null;
+    const dateError = document.getElementById('date-error');
+    // BFW-492 / BFW-501: privacy + optional AGB checkbox.
+    // Submit button stays enabled so a click always triggers feedback —
+    // missing consents surface as inline errors in the submit handler.
+    const privacyCheckbox = document.getElementById('privacy') as HTMLInputElement | null;
+    const agbCheckbox = document.getElementById('agb') as HTMLInputElement | null;
+
+    // BFW-501: highlight a missing checkbox in red and clear the highlight
+    // when the user checks it.
+    function markCheckboxState(cb: HTMLInputElement | null, missing: boolean) {
+      if (!cb) return;
+      const wrapper = cb.closest('div');
+      if (missing) {
+        cb.classList.add('ring-2', 'ring-red-500', 'rounded');
+        wrapper?.classList.add('p-2', 'bg-red-50', 'rounded-lg');
+      } else {
+        cb.classList.remove('ring-2', 'ring-red-500', 'rounded');
+        wrapper?.classList.remove('p-2', 'bg-red-50', 'rounded-lg');
+      }
+    }
+
+    const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+
+    // BFW-495: prefill from sessionStorage when the user came via the apartment-card CTA.
+    // URL params (if any) win over sessionStorage. Storage is cleared after a single read.
+    try {
+      const raw = sessionStorage.getItem('mfws_booking_draft');
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft && typeof draft === 'object') {
+          const apartmentSelect = document.getElementById('apartment') as HTMLSelectElement | null;
+          if (
+            apartmentSelect &&
+            typeof draft.apartmentSlug === 'string' &&
+            Array.from(apartmentSelect.options).some((o) => o.value === draft.apartmentSlug)
+          ) {
+            apartmentSelect.value = draft.apartmentSlug;
+          }
+          if (arrivalInput && typeof draft.checkIn === 'string' && isoDate.test(draft.checkIn)) {
+            arrivalInput.value = draft.checkIn;
+          }
+          if (departureInput && typeof draft.checkOut === 'string' && isoDate.test(draft.checkOut)) {
+            departureInput.value = draft.checkOut;
+          }
+        }
+        sessionStorage.removeItem('mfws_booking_draft');
+      }
+    } catch {
+      /* prefill is best-effort */
+    }
+
+    // Prefill apartment + dates from query params (?apartment=&checkIn=&checkOut=).
+    // URL params take precedence over sessionStorage so explicit links keep working.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const apartmentParam = params.get('apartment');
+      const checkInParam = params.get('checkIn');
+      const checkOutParam = params.get('checkOut');
+      if (apartmentParam) {
+        const apartmentSelect = document.getElementById('apartment') as HTMLSelectElement | null;
+        if (apartmentSelect && Array.from(apartmentSelect.options).some((o) => o.value === apartmentParam)) {
+          apartmentSelect.value = apartmentParam;
+        }
+      }
+      if (arrivalInput && checkInParam && isoDate.test(checkInParam)) {
+        arrivalInput.value = checkInParam;
+      }
+      if (departureInput && checkOutParam && isoDate.test(checkOutParam)) {
+        departureInput.value = checkOutParam;
+      }
+    } catch {
+      /* prefill is best-effort */
+    }
+
+    function dayAfterIso(isoDate: string): string {
+      const d = new Date(isoDate + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().split('T')[0];
+    }
+
+    function validateDates() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let errorMsg = '';
+      let isValid = true;
+
+      if (arrivalInput?.value) {
+        const arrival = new Date(arrivalInput.value);
+        if (arrival < today) {
+          errorMsg = 'Anreisedatum muss in der Zukunft liegen.';
+          arrivalInput.setCustomValidity(errorMsg);
+          isValid = false;
+        } else {
+          arrivalInput.setCustomValidity('');
+        }
+      }
+
+      if (departureInput?.value) {
+        const departure = new Date(departureInput.value);
+        if (departure < today) {
+          errorMsg = 'Abreisedatum muss in der Zukunft liegen.';
+          departureInput.setCustomValidity(errorMsg);
+          isValid = false;
+        } else {
+          departureInput.setCustomValidity('');
+        }
+      }
+
+      // BFW-492: enforce minimum 1 night.
+      if (arrivalInput?.value && departureInput?.value && isValid) {
+        const arrival = new Date(arrivalInput.value);
+        const departure = new Date(departureInput.value);
+        if (departure <= arrival) {
+          errorMsg = 'Mindestens 1 Übernachtung';
+          departureInput.setCustomValidity(errorMsg);
+          isValid = false;
+        }
+      }
+
+      if (dateError) {
+        if (errorMsg) {
+          dateError.textContent = errorMsg;
+          dateError.classList.remove('hidden');
+        } else {
+          dateError.classList.add('hidden');
+        }
+      }
+      return isValid;
+    }
+
+    // BFW-492: when arrival changes, pull the departure HTML5 `min` forward to arrival + 1.
+    function syncDepartureMin() {
+      if (!arrivalInput || !departureInput) return;
+      if (arrivalInput.value) {
+        const minOut = dayAfterIso(arrivalInput.value);
+        departureInput.min = minOut;
+        if (departureInput.value && departureInput.value < minOut) {
+          departureInput.value = '';
+        }
+      }
+    }
+
+    arrivalInput?.addEventListener('change', () => {
+      syncDepartureMin();
+      validateDates();
+    });
+    departureInput?.addEventListener('change', () => {
+      validateDates();
+    });
+
+    // Live price line — mirrors the home-page priceCalculator widget so the
+    // visitor sees the same total before submitting. Server still recomputes
+    // on submit; this is purely an estimate / display.
+    const apartmentSelect = document.getElementById('apartment') as HTMLSelectElement | null;
+    const priceDisplay = document.getElementById('bfw-form-price');
+    let priceDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let priceAbortController: AbortController | null = null;
+
+    const guestsSelect = document.getElementById('guests') as HTMLSelectElement | null;
+
+    // BFW-467: show/hide the per-apartment services block and collect selected service IDs.
+    function updateServicesVisibility() {
+      const slug = apartmentSelect?.value || '';
+      // Hide all service blocks first.
+      document.querySelectorAll('[id^="services-"]').forEach((el) => {
+        el.classList.add('hidden');
+      });
+      // Show the block for the selected apartment (if any).
+      if (slug) {
+        const block = document.getElementById(`services-${slug}`);
+        if (block) block.classList.remove('hidden');
+      }
+    }
+
+    function getSelectedServiceIds(): number[] {
+      const slug = apartmentSelect?.value || '';
+      if (!slug) return [];
+      const block = document.getElementById(`services-${slug}`);
+      if (!block) return [];
+      return Array.from(block.querySelectorAll<HTMLInputElement>('.service-checkbox:checked'))
+        .map((cb) => parseInt(cb.dataset.serviceId || '0', 10))
+        .filter((id) => id > 0);
+    }
+
+    function fetchFormPrice() {
+      if (!priceDisplay) return;
+      const tenantSlug = window.MFWS_TENANT_SLUG;
+      const apiBase = window.MFWS_PUBLIC_API_BASE_URL;
+      const apartmentSlug = apartmentSelect?.value || '';
+      const checkIn = arrivalInput?.value || '';
+      const checkOut = departureInput?.value || '';
+      const guests = parseInt(guestsSelect?.value || '1', 10) || 1;
+
+      if (!apartmentSlug || !checkIn || !checkOut) {
+        priceDisplay.textContent = 'Bitte Wohnung und Datum wählen';
+        return;
+      }
+      if (checkOut <= checkIn) {
+        priceDisplay.textContent = 'Bitte gültige Daten wählen.';
+        return;
+      }
+      if (!tenantSlug || !apiBase) {
+        priceDisplay.textContent = '';
+        return;
+      }
+
+      if (priceAbortController) priceAbortController.abort();
+      priceAbortController = new AbortController();
+
+      const selectedAdditionalServiceIds = getSelectedServiceIds();
+
+      fetch(
+        `${apiBase}/api/public/tenants/${tenantSlug}/apartments/${apartmentSlug}/price-calculation`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkIn, checkOut, guests, selectedAdditionalServiceIds }),
+          signal: priceAbortController.signal,
+        }
+      )
+        .then((res) => {
+          if (res.status === 422) {
+            priceDisplay.textContent = 'Bitte gültige Daten wählen.';
+            return null;
+          }
+          if (!res.ok) {
+            priceDisplay.textContent = 'Preis kann gerade nicht berechnet werden.';
+            return null;
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (!data) return;
+          const fmt = (n: number) =>
+            n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const baseTotal = data.nights * data.basePricePerNight;
+          let html = `${data.nights} Nächte × ${fmt(data.basePricePerNight)} € = ${fmt(baseTotal)} €`;
+          if (data.extraPersons > 0) {
+            html += `<br>+ ${data.extraPersons} Zusatzperson(en) × ${fmt(data.extraPersonSurcharge)} € × ${data.nights} Nächte = ${fmt(data.surchargeTotal)} €`;
+          }
+          // BFW-467: render per-service breakdown lines.
+          if (data.additionalServices && data.additionalServices.length > 0) {
+            data.additionalServices.forEach((svc: { labelDe: string; appliedAmount: number; calculationType: string }) => {
+              const calcLabel =
+                svc.calculationType === 'ONCE' ? 'einmalig' :
+                svc.calculationType === 'PER_NIGHT' ? 'pro Nacht' : 'pro Person/Nacht';
+              html += `<br>+ ${svc.labelDe}: ${fmt(svc.appliedAmount)} € (${calcLabel})`;
+            });
+          }
+          if (data.extraPersons > 0 || (data.additionalServices && data.additionalServices.length > 0)) {
+            html += `<br><span style="display:inline-block;width:100%;border-top:1px solid currentColor;margin:2px 0;opacity:0.3;"></span>`;
+          }
+          html += `<div class="mt-3 text-lg font-bold text-default dark:text-white">Gesamtpreis: ${fmt(data.totalPrice)} € <span class="text-sm font-normal text-muted dark:text-slate-400">(inkl. gesetzlicher MwSt.)</span></div>`;
+          priceDisplay.innerHTML = html;
+        })
+        .catch((err) => {
+          if (err && err.name === 'AbortError') return;
+          priceDisplay.textContent = 'Preis kann gerade nicht berechnet werden.';
+        });
+    }
+
+    function scheduleFormPriceFetch() {
+      if (priceDebounceTimer !== null) clearTimeout(priceDebounceTimer);
+      priceDebounceTimer = setTimeout(fetchFormPrice, 300);
+    }
+
+    apartmentSelect?.addEventListener('change', () => {
+      updateServicesVisibility();
+      scheduleFormPriceFetch();
+    });
+    arrivalInput?.addEventListener('change', scheduleFormPriceFetch);
+    departureInput?.addEventListener('change', scheduleFormPriceFetch);
+    guestsSelect?.addEventListener('change', scheduleFormPriceFetch);
+
+    // BFW-467: re-fetch price when a service checkbox is toggled.
+    form.addEventListener('change', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('service-checkbox') && !(target as HTMLInputElement).disabled) {
+        scheduleFormPriceFetch();
+      }
+    });
+
+    // BFW-501: clear the red consent-error highlight as soon as the user checks the box.
+    privacyCheckbox?.addEventListener('change', () => {
+      if (privacyCheckbox.checked) markCheckboxState(privacyCheckbox, false);
+    });
+    agbCheckbox?.addEventListener('change', () => {
+      if (agbCheckbox.checked) markCheckboxState(agbCheckbox, false);
+    });
+
+    // Initial services visibility + fetch when the form was prefilled from query params.
+    updateServicesVisibility();
+    if (apartmentSelect?.value && arrivalInput?.value && departureInput?.value) {
+      fetchFormPrice();
+    }
+    // BFW-492: ensure date inputs reflect the prefilled arrival's "min".
+    syncDepartureMin();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      errorMessage?.classList.add('hidden');
+      successMessage?.classList.add('hidden');
+
+      // BFW-501: explicit consent validation with visible feedback.
+      // Order: privacy first, then AGB (if present), so the error names the first
+      // missing field and we scroll to it.
+      if (privacyCheckbox && !privacyCheckbox.checked) {
+        markCheckboxState(privacyCheckbox, true);
+        const errorText = document.getElementById('error-text');
+        if (errorText) errorText.textContent = 'Bitte stimmen Sie der Datenschutzerklärung zu, um Ihre Anfrage zu senden.';
+        errorMessage?.classList.remove('hidden');
+        privacyCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        privacyCheckbox.focus({ preventScroll: true });
+        return;
+      }
+      if (agbCheckbox && !agbCheckbox.checked) {
+        markCheckboxState(agbCheckbox, true);
+        const errorText = document.getElementById('error-text');
+        if (errorText) errorText.textContent = 'Bitte stimmen Sie den Allgemeinen Geschäftsbedingungen zu, um Ihre Anfrage zu senden.';
+        errorMessage?.classList.remove('hidden');
+        agbCheckbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        agbCheckbox.focus({ preventScroll: true });
+        return;
+      }
+
+      if (!validateDates()) return;
+
+      const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+      if (submitBtn) submitBtn.disabled = true;
+
+      const tenantSlug = window.MFWS_TENANT_SLUG;
+      const apiBase = window.MFWS_PUBLIC_API_BASE_URL;
+
+      const data = new FormData(form);
+      const apartmentSlug = String(data.get('apartment') || '');
+      const fullName = String(data.get('name') || '').trim();
+      const [firstName, ...rest] = fullName.split(/\s+/);
+      const lastName = rest.join(' ') || firstName;
+
+      const payload = {
+        guestFirstName: firstName,
+        guestLastName: lastName,
+        guestEmail: String(data.get('email') || ''),
+        guestPhone: String(data.get('phone') || '') || null,
+        startDate: String(data.get('arrival') || ''),
+        endDate: String(data.get('departure') || ''),
+        numberOfGuests: parseInt(String(data.get('guests') || '1'), 10),
+        message: String(data.get('message') || '') || null,
+        honeypot: String(data.get('website-url') || '') || null,
+        // BFW-467: include selected additional service IDs in the booking request.
+        selectedAdditionalServiceIds: getSelectedServiceIds(),
+      };
+
+      const showError = (msg: string) => {
+        const errorText = document.getElementById('error-text');
+        if (errorText) errorText.textContent = msg;
+        errorMessage?.classList.remove('hidden');
+        if (submitBtn) submitBtn.disabled = false;
+      };
+
+      if (!tenantSlug || !apiBase) {
+        // Markers not replaced (local dev / template misconfig). Show success
+        // anyway so the demo still appears functional, but log the gap.
+        console.warn('Booking endpoint markers missing — skipping POST.');
+        const emailField = document.getElementById('email') as HTMLInputElement | null;
+        const successGuestEmail = document.getElementById('success-guest-email');
+        if (successGuestEmail && emailField) {
+          successGuestEmail.textContent = emailField.value;
+        }
+        form.classList.add('hidden');
+        successMessage?.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${apiBase}/api/public/tenants/${tenantSlug}/apartments/${apartmentSlug}/booking-requests`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (res.status === 200) {
+          const responseData = await res.json().catch(() => ({}));
+          pendingResendToken = responseData.token ?? responseData.confirmationToken ?? null;
+          const emailField = document.getElementById('email') as HTMLInputElement | null;
+          const successGuestEmail = document.getElementById('success-guest-email');
+          if (successGuestEmail && emailField) {
+            successGuestEmail.textContent = emailField.value;
+          }
+          form.classList.add('hidden');
+          successMessage?.classList.remove('hidden');
+          // Tell the calendar widget to refetch so the new RESERVED slot shows up.
+          document.dispatchEvent(new CustomEvent('booking-request-submitted'));
+          // Wire the resend button (one-time listener via once:true equivalent).
+          const resendBtn = document.getElementById('resend-doi-btn') as HTMLButtonElement | null;
+          const resendSuccess = document.getElementById('resend-doi-success');
+          const resendLimit = document.getElementById('resend-doi-limit');
+          resendBtn?.addEventListener('click', async function handleResend() {
+            if (!resendBtn || resendBtn.disabled) return;
+            resendBtn.disabled = true;
+            resendSuccess?.classList.add('hidden');
+            resendLimit?.classList.add('hidden');
+            const base = window.MFWS_PUBLIC_API_BASE_URL || '';
+            try {
+              const resendRes = await fetch(
+                `${base}/api/public/booking-requests/resend-confirmation?token=${encodeURIComponent(pendingResendToken ?? '')}`,
+                { method: 'POST', headers: { Accept: 'application/json' } }
+              );
+              if (resendRes.ok) {
+                resendBtn.classList.add('hidden');
+                resendSuccess?.classList.remove('hidden');
+              } else if (resendRes.status === 429) {
+                resendBtn.classList.add('hidden');
+                resendLimit?.classList.remove('hidden');
+              } else {
+                resendBtn.disabled = false;
+              }
+            } catch {
+              resendBtn.disabled = false;
+            }
+          }, { once: true });
+          return;
+        }
+        if (res.status === 400) {
+          const body = await res.json().catch(() => ({}));
+          showError(body.message || 'Bitte prüfen Sie Ihre Eingaben.');
+          return;
+        }
+        if (res.status === 404) {
+          showError('Diese Ferienwohnung ist nicht verfügbar.');
+          return;
+        }
+        showError('Bitte versuchen Sie es später noch einmal.');
+      } catch (err) {
+        console.error('Booking request failed', err);
+        showError('Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es später noch einmal.');
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', initBookingForm);
+</script>

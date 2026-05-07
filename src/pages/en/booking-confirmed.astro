@@ -1,0 +1,89 @@
+---
+// BFW-374: DOI result page (English). result=confirmed | already-confirmed | expired
+import Layout from '~/layouts/PageLayoutEn.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+
+const metadata = { title: 'Booking request' };
+---
+
+<!-- BFW-374: expose API base URL for the resend script. -->
+<script is:inline define:vars={{ apiBase: '%%%PUBLIC_API_BASE_URL%%%' }}>
+  window.MFWS_PUBLIC_API_BASE_URL = apiBase;
+</script>
+
+<Layout metadata={metadata}>
+  <HeroText tagline="Booking request" title="Status of your request" />
+
+  <section class="py-12 md:py-16">
+    <div class="max-w-lg mx-auto px-4 sm:px-6 text-center">
+
+      <div id="state-confirmed" class="hidden bg-green-50 border border-green-200 text-green-800 p-8 rounded-2xl">
+        <h1 class="text-xl font-bold mb-3">Request successfully confirmed</h1>
+        <p class="mb-4">We have forwarded your request to the host. You will hear back shortly with a confirmation or an alternative proposal.</p>
+        <a href="/en/" class="text-sm text-green-700 underline hover:no-underline">Back to homepage</a>
+      </div>
+
+      <div id="state-already-confirmed" class="hidden bg-green-50 border border-green-200 text-green-800 p-8 rounded-2xl">
+        <h1 class="text-xl font-bold mb-3">Request already confirmed</h1>
+        <p class="mb-4">This request was already confirmed successfully — everything is fine.</p>
+        <a href="/en/" class="text-sm text-green-700 underline hover:no-underline">Back to homepage</a>
+      </div>
+
+      <div id="state-expired" class="hidden bg-amber-50 border border-amber-200 text-amber-900 p-8 rounded-2xl">
+        <h1 class="text-xl font-bold mb-3">Confirmation link expired</h1>
+        <p class="mb-6">This link is no longer valid. Request a new one below — we will send it to your email address right away.</p>
+        <div id="resend-area">
+          <button id="resend-btn" type="button" class="btn btn-secondary font-semibold bg-secondary text-white border-secondary hover:bg-primary hover:border-primary px-8 py-3 rounded-full">Request new confirmation link</button>
+          <p id="resend-success" class="hidden mt-4 text-sm text-green-800 font-medium">We sent you a new link. Please check your inbox.</p>
+          <p id="resend-limit" class="hidden mt-4 text-sm text-amber-800 font-medium">Please try again in an hour.</p>
+          <p id="resend-error" class="hidden mt-4 text-sm text-red-700">Something went wrong. Please try again later.</p>
+        </div>
+      </div>
+
+      <div id="state-unknown" class="hidden bg-gray-50 border border-gray-200 text-gray-700 p-8 rounded-2xl">
+        <p>This page could not be loaded. Please open the link from the email again.</p>
+      </div>
+
+    </div>
+  </section>
+</Layout>
+
+<script>
+  function initResultPage() {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get('result') || '';
+    const token = params.get('token') || '';
+    const apiBase = (window as any).MFWS_PUBLIC_API_BASE_URL as string | undefined;
+    const show = (id: string) => document.getElementById(id)?.classList.remove('hidden');
+
+    if (result === 'confirmed') show('state-confirmed');
+    else if (result === 'already-confirmed') show('state-already-confirmed');
+    else if (result === 'expired') { show('state-expired'); initResend(token, apiBase); }
+    else show('state-unknown');
+  }
+
+  function initResend(token: string, apiBase: string | undefined) {
+    const resendBtn = document.getElementById('resend-btn') as HTMLButtonElement | null;
+    const resendSuccess = document.getElementById('resend-success');
+    const resendLimit = document.getElementById('resend-limit');
+    const resendError = document.getElementById('resend-error');
+    if (!token) { resendBtn?.classList.add('hidden'); resendError?.classList.remove('hidden'); return; }
+    resendBtn?.addEventListener('click', async () => {
+      if (!resendBtn) return;
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Sending...';
+      resendSuccess?.classList.add('hidden');
+      resendLimit?.classList.add('hidden');
+      resendError?.classList.add('hidden');
+      const base = apiBase || '';
+      try {
+        const res = await fetch(`${base}/api/public/booking-requests/resend-confirmation?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { Accept: 'application/json' } });
+        if (res.ok) { resendBtn.classList.add('hidden'); resendSuccess?.classList.remove('hidden'); }
+        else if (res.status === 429) { resendBtn.disabled = false; resendBtn.textContent = 'Request new confirmation link'; resendLimit?.classList.remove('hidden'); }
+        else { resendBtn.disabled = false; resendBtn.textContent = 'Request new confirmation link'; resendError?.classList.remove('hidden'); }
+      } catch { resendBtn.disabled = false; resendBtn.textContent = 'Request new confirmation link'; resendError?.classList.remove('hidden'); }
+    });
+  }
+
+  document.addEventListener('astro:page-load', initResultPage);
+</script>

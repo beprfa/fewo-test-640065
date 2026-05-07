@@ -1,0 +1,34 @@
+---
+import Layout from '~/layouts/Layout.astro';
+import Header from '~/components/widgets/Header.astro';
+import Footer from '~/components/widgets/Footer.astro';
+import { headerDataEn, footerDataEn } from '~/navigation';
+
+import type { MetaData } from '~/types';
+
+export interface Props {
+  metadata?: MetaData;
+}
+
+const { metadata } = Astro.props;
+---
+
+<Layout metadata={metadata} lang="en">
+  <slot name="announcement">
+    <div class="bg-[#005780] text-white text-sm text-center py-2 px-3">
+      Sample website. Curious? Learn more at <a href="https://www.meinfewosite.de" target="_blank" rel="noopener" class="underline font-semibold hover:text-gray-200">MeineFeWoSeite.de</a>
+    </div>
+  </slot>
+  <slot name="header">
+    <Header {...headerDataEn} isSticky lang="en" />
+  </slot>
+  <main>
+    <slot />
+  </main>
+  <div class="bg-[#d6eaf0] border-y border-[#b0d4e3] text-[#005780] text-sm text-center py-3 px-4">
+    This is a sample website by <a href="https://www.meinfewosite.de" target="_blank" rel="noopener" class="underline font-semibold hover:text-[#003d5c]">MeineFeWoSeite.de</a>. All content, persons, and properties are fictitious and for demonstration purposes only.
+  </div>
+  <slot name="footer">
+    <Footer {...footerDataEn} lang="en" />
+  </slot>
+</Layout>

@@ -1,0 +1,233 @@
+---
+interface Props {
+  apartment: string;
+  id: string;
+  lang?: string;
+}
+
+const { apartment, id, lang = 'de' } = Astro.props;
+const calendarId = `cal-${id}`;
+const isEn = lang === 'en';
+const weekdays = isEn ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const prevLabel = isEn ? 'Previous Month' : 'Vorheriger Monat';
+const nextLabel = isEn ? 'Next Month' : 'Nächster Monat';
+const availableLabel = isEn ? 'Available' : 'Verfügbar';
+const reservedLabel = isEn ? 'Requested' : 'Reserviert';
+const bookedLabel = isEn ? 'Booked' : 'Belegt';
+const todayLabel = isEn ? 'Today' : 'Heute';
+---
+
+<div
+  class="max-w-sm mx-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4"
+  data-calendar={calendarId}
+  data-apartment-slug={apartment}
+  data-lang={lang}
+  role="region"
+  aria-label={`${apartment} ${isEn ? 'availability calendar' : 'Verfügbarkeitskalender'}`}
+>
+  <div class="flex items-center justify-between mb-3">
+    <button type="button" class="p-1 border border-gray-200 dark:border-slate-600 rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-calendar-prev={calendarId} aria-label={prevLabel}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <span class="font-semibold text-sm dark:text-white" data-calendar-title={calendarId}></span>
+    <button type="button" class="p-1 border border-gray-200 dark:border-slate-600 rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-calendar-next={calendarId} aria-label={nextLabel}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-7 gap-0.5 mb-1">
+    {weekdays.map(day => (
+      <div class="text-center text-xs font-semibold text-muted dark:text-slate-400 py-1">{day}</div>
+    ))}
+  </div>
+
+  <div class="grid grid-cols-7 gap-0.5" data-calendar-grid={calendarId} aria-live="polite"></div>
+
+  <div class="text-center text-xs text-muted dark:text-slate-400 mt-2 hidden" data-calendar-status={calendarId} role="status"></div>
+
+  <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3 text-xs text-muted dark:text-slate-400">
+    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block" style="background: rgba(0,120,0,0.12)" aria-hidden="true"></span> {availableLabel}</span>
+    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block" style="background: rgba(202,138,4,0.18)" aria-hidden="true"></span> {reservedLabel}</span>
+    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block" style="background: rgba(200,0,0,0.12)" aria-hidden="true"></span> {bookedLabel}</span>
+    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block border-2 border-[#005780]" aria-hidden="true"></span> {todayLabel}</span>
+  </div>
+</div>
+
+<script>
+  type PublicBooking = {
+    apartmentSlug: string;
+    startDate: string; // ISO yyyy-MM-dd
+    endDate: string;   // ISO yyyy-MM-dd
+    status: 'RESERVED' | 'BOOKED';
+  };
+
+  // Per-tenant cache: avoids one fetch per calendar widget on the same page.
+  // window.__bookingsCache is shared across all calendars for a single page load.
+  declare global {
+    interface Window {
+      __bookingsCache?: Promise<PublicBooking[]>;
+      MFWS_TENANT_SLUG?: string;
+      MFWS_PUBLIC_API_BASE_URL?: string;
+    }
+  }
+
+  function fetchBookings(): Promise<PublicBooking[]> {
+    if (window.__bookingsCache) return window.__bookingsCache;
+    const slug = window.MFWS_TENANT_SLUG;
+    const base = window.MFWS_PUBLIC_API_BASE_URL;
+    if (!slug || !base) {
+      // Markers not replaced — local dev or template misconfiguration.
+      return Promise.resolve([]);
+    }
+    window.__bookingsCache = fetch(`${base}/api/public/tenants/${slug}/bookings`, {
+      headers: { Accept: 'application/json' },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<PublicBooking[]>;
+      })
+      .catch(() => {
+        // Reset the cache so a later page load can retry.
+        window.__bookingsCache = undefined;
+        return [];
+      });
+    return window.__bookingsCache;
+  }
+
+  function initCalendars() {
+    document.querySelectorAll<HTMLElement>('[data-calendar]').forEach(calendarEl => {
+      if (calendarEl.dataset.initialized) return;
+      calendarEl.dataset.initialized = 'true';
+      const calendarId = calendarEl.dataset.calendar!;
+      const apartmentSlug = calendarEl.dataset.apartmentSlug || '';
+      const lang = calendarEl.dataset.lang || 'de';
+      const isEn = lang === 'en';
+
+      const monthNames = isEn
+        ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        : ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+      const titleEl = document.querySelector<HTMLElement>(`[data-calendar-title="${calendarId}"]`);
+      const gridEl = document.querySelector<HTMLElement>(`[data-calendar-grid="${calendarId}"]`);
+      const statusEl = document.querySelector<HTMLElement>(`[data-calendar-status="${calendarId}"]`);
+      const prevBtns = document.querySelectorAll(`[data-calendar-prev="${calendarId}"]`);
+      const nextBtns = document.querySelectorAll(`[data-calendar-next="${calendarId}"]`);
+
+      if (!titleEl || !gridEl) return;
+
+      const today = new Date();
+      let currentMonth = today.getMonth();
+      let currentYear = today.getFullYear();
+      let bookings: PublicBooking[] = [];
+      let didLoad = false;
+
+      type DayState = 'free' | 'reserved' | 'booked';
+      function dayState(dateStr: string): DayState {
+        for (const b of bookings) {
+          if (b.apartmentSlug !== apartmentSlug) continue;
+          // [start, end) — checkout day is free for the next guest.
+          if (dateStr >= b.startDate && dateStr < b.endDate) {
+            return b.status === 'RESERVED' ? 'reserved' : 'booked';
+          }
+        }
+        return 'free';
+      }
+
+      function renderCalendar() {
+        titleEl!.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+        gridEl!.innerHTML = '';
+
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        let startDay = firstDay.getDay() - 1;
+        if (startDay < 0) startDay = 6;
+
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const todayStr = today.toISOString().split('T')[0];
+
+        for (let i = 0; i < startDay; i++) {
+          const empty = document.createElement('div');
+          empty.className = 'text-center py-1 text-xs';
+          gridEl!.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(currentYear, currentMonth, day);
+          const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+          const cell = document.createElement('div');
+          cell.className = 'text-center py-1 text-xs rounded';
+          cell.textContent = String(day);
+
+          const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const isToday = dateStr === todayStr;
+          const state: DayState = didLoad ? dayState(dateStr) : 'free';
+
+          if (isPast) {
+            cell.style.color = 'rgba(0,0,0,0.25)';
+          } else if (state === 'booked') {
+            cell.style.background = 'rgba(200,0,0,0.12)';
+            cell.style.color = '#991b1b';
+            cell.style.textDecoration = 'line-through';
+            cell.setAttribute('aria-label', `${day} ${isEn ? 'booked' : 'belegt'}`);
+          } else if (state === 'reserved') {
+            cell.style.background = 'rgba(202,138,4,0.18)';
+            cell.style.color = '#854d0e';
+            cell.setAttribute('aria-label', `${day} ${isEn ? 'requested' : 'reserviert'}`);
+          } else {
+            cell.style.background = 'rgba(0,120,0,0.12)';
+            cell.style.color = '#005780';
+          }
+
+          if (isToday) {
+            cell.style.fontWeight = '700';
+            cell.style.outline = '2px solid #005780';
+            cell.style.outlineOffset = '-2px';
+          }
+
+          gridEl!.appendChild(cell);
+        }
+      }
+
+      prevBtns.forEach(btn => btn.addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        renderCalendar();
+      }));
+
+      nextBtns.forEach(btn => btn.addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        renderCalendar();
+      }));
+
+      // Render once with empty data so the grid appears immediately,
+      // then re-render once bookings load. Failed load → grid stays as-is.
+      renderCalendar();
+      fetchBookings().then(data => {
+        bookings = data;
+        didLoad = true;
+        renderCalendar();
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCalendars);
+  } else {
+    initCalendars();
+  }
+  document.addEventListener('astro:page-load', initCalendars);
+
+  // BFW-351: refetch + re-render after the contact form successfully submits a
+  // booking request, so the new RESERVED slot shows up immediately without a
+  // page reload.
+  document.addEventListener('booking-request-submitted', () => {
+    window.__bookingsCache = undefined;
+    document.querySelectorAll<HTMLElement>('[data-calendar]').forEach(el => {
+      delete el.dataset.initialized;
+      const grid = el.querySelector<HTMLElement>('[data-calendar-grid]');
+      if (grid) grid.innerHTML = '';
+    });
+    initCalendars();
+  });
+</script>

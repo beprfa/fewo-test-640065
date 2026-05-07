@@ -1,0 +1,72 @@
+site:
+  name: '%%%BUILDING_NAME%%%'
+  site: 'http://localhost:4326'
+  base: '/'
+  trailingSlash: false
+
+  googleSiteVerificationId:
+
+# Default SEO metadata
+metadata:
+  title:
+    default: '%%%BUILDING_NAME%%% – Ferienwohnungen in %%%BUILDING_CITY%%%'
+    template: '%s — %%%BUILDING_NAME%%%'
+  description: 'Ferienwohnungen im alpinen Landhaus am Fuße der Chiemgauer Alpen. Ankommen. Durchatmen. Genießen.'
+  robots:
+    index: true
+    follow: true
+  openGraph:
+    site_name: '%%%BUILDING_NAME%%%'
+    images:
+      - url: '~/assets/images/default.png'
+        width: 1200
+        height: 628
+    type: website
+  twitter:
+    handle: ''
+    site: ''
+    cardType: summary_large_image
+
+i18n:
+  language: de
+  textDirection: ltr
+
+apps:
+  blog:
+    isEnabled: false
+    postsPerPage: 6
+
+    post:
+      isEnabled: false
+      permalink: '/%slug%'
+      robots:
+        index: true
+
+    list:
+      isEnabled: false
+      pathname: 'blog'
+      robots:
+        index: true
+
+    category:
+      isEnabled: false
+      pathname: 'category'
+      robots:
+        index: true
+
+    tag:
+      isEnabled: false
+      pathname: 'tag'
+      robots:
+        index: false
+
+    isRelatedPostsEnabled: false
+    relatedPostsCount: 4
+
+analytics:
+  vendors:
+    googleAnalytics:
+      id: null
+
+ui:
+  theme: 'system'

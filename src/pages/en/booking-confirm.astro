@@ -1,0 +1,91 @@
+---
+// BFW-374: DOI confirmation landing page (English).
+// Backend GET /api/public/booking-requests/confirm?token={uuid} 302-redirects here.
+// Token is loaded from URL; consumption happens via POST.
+import Layout from '~/layouts/PageLayoutEn.astro';
+import HeroText from '~/components/widgets/HeroText.astro';
+
+const metadata = { title: 'Confirm booking request' };
+---
+
+<!-- BFW-374: expose API base URL for the confirmation script. -->
+<script is:inline define:vars={{ apiBase: '%%%PUBLIC_API_BASE_URL%%%' }}>
+  window.MFWS_PUBLIC_API_BASE_URL = apiBase;
+</script>
+
+<Layout metadata={metadata}>
+  <HeroText tagline="Almost done" title="Please confirm your request" />
+
+  <section class="py-12 md:py-16">
+    <div class="max-w-lg mx-auto px-4 sm:px-6 text-center">
+      <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm">
+        <p class="text-default dark:text-slate-200 mb-2">
+          You clicked the confirmation link in the email — great.
+        </p>
+        <p class="text-default dark:text-slate-200 mb-6">
+          Click the button below to complete your request. We will then forward it to the host right away.
+        </p>
+
+        <div id="token-error" class="hidden bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-6 text-sm">
+          This link is invalid or incomplete. Please open the link from the confirmation email again.
+        </div>
+
+        <div id="confirm-action">
+          <button
+            id="confirm-btn"
+            type="button"
+            class="btn btn-secondary font-semibold bg-secondary text-white border-secondary hover:bg-primary hover:border-primary px-8 py-3 rounded-full w-full"
+          >
+            Confirm request
+          </button>
+          <p id="confirm-error" class="hidden mt-3 text-sm text-red-700">
+            Something went wrong. Please try again or request a new link.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  function initConfirmPage() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const tokenError = document.getElementById('token-error');
+    const confirmAction = document.getElementById('confirm-action');
+    const confirmBtn = document.getElementById('confirm-btn') as HTMLButtonElement | null;
+    const confirmError = document.getElementById('confirm-error');
+    const apiBase = (window as any).MFWS_PUBLIC_API_BASE_URL as string | undefined;
+
+    if (!token) {
+      tokenError?.classList.remove('hidden');
+      confirmAction?.classList.add('hidden');
+      return;
+    }
+
+    confirmBtn?.addEventListener('click', async () => {
+      if (!confirmBtn) return;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Confirming...';
+      confirmError?.classList.add('hidden');
+      const base = apiBase || '';
+      try {
+        const res = await fetch(`${base}/api/public/booking-requests/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const body = await res.json().catch(() => ({}));
+        const result: string = body.result || 'confirmed';
+        const resultParam = (res.ok || res.status === 409) ? result : 'expired';
+        window.location.href = `/en/booking-confirmed?result=${encodeURIComponent(resultParam)}&token=${encodeURIComponent(token)}`;
+      } catch {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Confirm request';
+        confirmError?.classList.remove('hidden');
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', initConfirmPage);
+</script>

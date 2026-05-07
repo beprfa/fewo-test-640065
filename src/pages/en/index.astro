@@ -1,0 +1,316 @@
+---
+import Layout from '~/layouts/PageLayoutEn.astro';
+import { Icon } from 'astro-icon/components';
+
+import Hero from '~/components/widgets/Hero.astro';
+import Content from '~/components/widgets/Content.astro';
+import FAQs from '~/components/widgets/FAQs.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import Testimonials from '~/components/widgets/Testimonials.astro';
+import AvailabilityCalendar from '~/components/AvailabilityCalendar.astro';
+
+import ImageCarousel from '~/components/ImageCarousel.astro';
+
+// %%%APARTMENT_IMPORTS_START%%%
+import ap1 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-1.jpg';
+import ap2 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-2.jpg';
+import ap3 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-3.jpg';
+import ap4 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-4.jpg';
+import ap5 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-5.jpg';
+import ap6 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-6.jpg';
+import ap7 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-7.jpg';
+import ap8 from '~/assets/images/apartments/alpenpanorama/alpenpanorama-8.jpg';
+
+import lh1 from '~/assets/images/landhaus/bauernhof-01.jpg';
+import lh2 from '~/assets/images/landhaus/bauernhof-02.jpg';
+import lh3 from '~/assets/images/landhaus/bauernhof-03.jpg';
+import lh4 from '~/assets/images/landhaus/bauernhof-04.jpg';
+import lh5 from '~/assets/images/landhaus/bauernhof-05.jpg';
+import lh6 from '~/assets/images/landhaus/bauernhof-06.jpg';
+
+import bw1 from '~/assets/images/apartments/bergwiese/bergwiese-1.jpg';
+import bw2 from '~/assets/images/apartments/bergwiese/bergwiese-2.jpg';
+import bw3 from '~/assets/images/apartments/bergwiese/bergwiese-3.jpg';
+import bw4 from '~/assets/images/apartments/bergwiese/bergwiese-4.jpg';
+import bw5 from '~/assets/images/apartments/bergwiese/bergwiese-5.jpg';
+import bw6 from '~/assets/images/apartments/bergwiese/bergwiese-6.jpg';
+// %%%APARTMENT_IMPORTS_END%%%
+
+// %%%APARTMENT_IMAGE_ARRAYS_START%%%
+const alpenpanoramaImages = [
+  { src: ap1, alt: 'Alpenpanorama 1' },
+  { src: ap2, alt: 'Alpenpanorama 2' },
+  { src: ap3, alt: 'Alpenpanorama 3' },
+  { src: ap4, alt: 'Alpenpanorama 4' },
+  { src: ap5, alt: 'Alpenpanorama 5' },
+  { src: ap6, alt: 'Alpenpanorama 6' },
+  { src: ap7, alt: 'Alpenpanorama 7' },
+  { src: ap8, alt: 'Alpenpanorama 8' },
+];
+
+const landhausImages = [
+  { src: lh1, alt: 'Sonnenhof Alpenblick Country House' },
+  { src: lh2, alt: 'Sonnenhof Alpenblick Garden' },
+  { src: lh3, alt: 'Sonnenhof Alpenblick Terrace' },
+  { src: lh4, alt: 'Sonnenhof Alpenblick Surroundings' },
+  { src: lh5, alt: 'Sonnenhof Alpenblick View' },
+  { src: lh6, alt: 'Sonnenhof Alpenblick Entrance' },
+];
+
+const bergwieseImages = [
+  { src: bw1, alt: 'Bergwiese 1' },
+  { src: bw2, alt: 'Bergwiese 2' },
+  { src: bw3, alt: 'Bergwiese 3' },
+  { src: bw4, alt: 'Bergwiese 4' },
+  { src: bw5, alt: 'Bergwiese 5' },
+  { src: bw6, alt: 'Bergwiese 6' },
+];
+// %%%APARTMENT_IMAGE_ARRAYS_END%%%
+
+const metadata = {
+  title: '%%%BUILDING_NAME%%% – Holiday Apartments in %%%BUILDING_CITY%%%',
+  ignoreTitleTemplate: true,
+};
+---
+
+<!-- BFW-352: tenant slug + public API base URL for the AvailabilityCalendar widget. -->
+<script is:inline define:vars={{ tenantSlug: '%%%TENANT_SLUG%%%', apiBase: '%%%PUBLIC_API_BASE_URL%%%' }}>
+  window.MFWS_TENANT_SLUG = tenantSlug;
+  window.MFWS_PUBLIC_API_BASE_URL = apiBase;
+</script>
+
+<Layout metadata={metadata}>
+  <!-- Hero Widget ******************* -->
+
+  <Hero
+    actions={[
+      {
+        variant: 'secondary',
+        text: 'Booking Request',
+        href: '/en/contact',
+        icon: 'tabler:mail',
+      },
+      { variant: 'primary', text: 'View Apartments', href: '#apartments' },
+    ]}
+    image={{ src: '~/assets/images/hero-image.jpg', alt: '%%%BUILDING_NAME%%% – Holiday Apartments in %%%BUILDING_CITY%%%' }}
+  >
+    <Fragment slot="title">
+      <span class="text-primary dark:text-white">%%%WEBSITE_HEADLINE%%%</span>
+    </Fragment>
+
+    <Fragment slot="subtitle">
+      %%%WEBSITE_SUBTEXT%%%
+    </Fragment>
+  </Hero>
+
+  <!-- Apartments Section *************** -->
+
+  <section id="apartments" class="py-12 md:py-16 bg-blue-50 dark:bg-slate-900">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center max-w-3xl mx-auto mb-8">
+        <p class="text-base text-primary font-bold tracking-wide uppercase mb-2">Holiday Apartments</p>
+        <h2 class="text-4xl md:text-5xl font-bold tracking-tight mb-4 font-heading dark:text-gray-200">Your Holiday Apartments in %%%BUILDING_CITY%%%</h2>
+        <p class="text-lg text-muted dark:text-slate-400">
+          %%%BUILDING_DESCRIPTION%%%
+        </p>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-3 text-lg text-default dark:text-slate-300 mb-8">
+        <!-- %%%BUILDING_AMENITIES_EN_START%%% -->
+        <span class="flex items-center gap-1.5"><Icon name="tabler:trees" class="w-5 h-5" /> Garden</span>
+        <span class="flex items-center gap-1.5"><Icon name="tabler:sun" class="w-5 h-5" /> Terrace</span>
+        <span class="flex items-center gap-1.5"><Icon name="tabler:flame" class="w-5 h-5" /> BBQ</span>
+        <span class="flex items-center gap-1.5"><Icon name="tabler:car" class="w-5 h-5" /> Parking</span>
+        <span class="flex items-center gap-1.5"><Icon name="tabler:mood-kid" class="w-5 h-5" /> Children welcome</span>
+        <span class="flex items-center gap-1.5"><Icon name="tabler:paw" class="w-5 h-5" /> Pets allowed</span>
+        <span class="flex items-center gap-1.5"><Icon name="tabler:sparkles" class="w-5 h-5" /> Renovated in 2025</span>
+        <!-- %%%BUILDING_AMENITIES_EN_END%%% -->
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <!-- %%%APARTMENT_CARDS_EN_START%%% -->
+        <div class="bg-white dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
+          <ImageCarousel images={alpenpanoramaImages} id="alpenpanorama" />
+          <div class="p-5">
+            <h3 class="text-xl font-bold mb-2 dark:text-white">Alpenpanorama</h3>
+            <p class="text-lg text-muted dark:text-slate-400 mb-3">Our largest apartment on the ground floor with a beautiful view of the Alps. Ideal for families.</p>
+            <p class="text-lg font-semibold text-primary mb-3">From 60 € / night (1 pers.) · 75 € / night (2 pers.) · incl. 7% VAT</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-lg text-muted dark:text-slate-400 mb-4">
+              <span class="flex items-center gap-1"><Icon name="tabler:maximize" class="w-5 h-5" /> 110 m²</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bed" class="w-5 h-5" /> Bedroom</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bed-flat" class="w-5 h-5" /> Double bed</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bed" class="w-5 h-5" /> Single bed</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:tools-kitchen-2" class="w-5 h-5" /> Kitchen</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bath" class="w-5 h-5" /> Bathroom</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:droplet" class="w-5 h-5" /> Shower</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:toilet-paper" class="w-5 h-5" /> WC</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:sofa" class="w-5 h-5" /> Living room</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:device-tv" class="w-5 h-5" /> TV</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:wifi" class="w-5 h-5" /> Wi-Fi</span>
+            </div>
+            <AvailabilityCalendar apartment="alpenpanorama" id="alpenpanorama-en" lang="en" />
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
+          <ImageCarousel images={bergwieseImages} id="bergwiese" />
+          <div class="p-5">
+            <h3 class="text-xl font-bold mb-2 dark:text-white">Bergwiese</h3>
+            <p class="text-lg text-muted dark:text-slate-400 mb-3">Cozy apartment on the ground floor with a view of the garden. Ideal for a getaway for two.</p>
+            <p class="text-lg font-semibold text-primary mb-3">From 45 € / night (1 pers.) · 60 € / night (2 pers.) · incl. 7% VAT</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-lg text-muted dark:text-slate-400 mb-4">
+              <span class="flex items-center gap-1"><Icon name="tabler:maximize" class="w-5 h-5" /> 20 m²</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bed" class="w-5 h-5" /> Bedroom</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bed-flat" class="w-5 h-5" /> Double bed</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:tools-kitchen-2" class="w-5 h-5" /> Kitchen</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:bath" class="w-5 h-5" /> Bathroom</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:droplet" class="w-5 h-5" /> Shower</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:toilet-paper" class="w-5 h-5" /> WC</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:sofa" class="w-5 h-5" /> Living room</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:device-tv" class="w-5 h-5" /> TV</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:wifi" class="w-5 h-5" /> Wi-Fi</span>
+              <span class="flex items-center gap-1"><Icon name="tabler:trees" class="w-5 h-5" /> Garden access</span>
+            </div>
+            <AvailabilityCalendar apartment="bergwiese" id="bergwiese-en" lang="en" />
+          </div>
+        </div>
+        <!-- %%%APARTMENT_CARDS_EN_END%%% -->
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Welcome Section **************** -->
+
+  <section id="the-estate" class="py-12 md:py-16">
+    <div class="max-w-7xl mx-auto px-4 md:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-8 md:mb-12">
+        <p class="text-base text-primary dark:text-blue-200 font-bold tracking-wide uppercase mb-2">Welcome to %%%BUILDING_NAME%%%</p>
+        <h2 class="text-4xl md:text-5xl font-bold tracking-tighter font-heading dark:text-gray-200">Your Home in %%%BUILDING_CITY%%%</h2>
+      </div>
+      <div class="md:flex md:flex-row-reverse md:gap-16">
+        <div class="md:basis-1/2 self-center mb-8 md:mb-0">
+          <p class="text-lg dark:text-slate-400">
+            %%%ENVIRONMENT_DESCRIPTION%%%
+          </p>
+        </div>
+        <div class="md:basis-1/2">
+          <div class="rounded-lg overflow-hidden shadow-lg">
+            <ImageCarousel images={landhausImages} id="landhaus" imageClass="w-full aspect-[3/2] object-cover" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Getting Here Section *************** -->
+
+  <section id="getting-here" class="py-12 md:py-16 bg-blue-50 dark:bg-slate-900">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-10">
+        <p class="text-base text-primary font-bold tracking-wide uppercase mb-2">Getting Here</p>
+        <h2 class="text-4xl md:text-5xl font-bold tracking-tight mb-4 font-heading dark:text-gray-200">How to Reach Us</h2>
+      </div>
+
+      <!-- %%%ANREISE_MAP_EN_START%%% -->
+      <div class="text-center mb-6">
+        <p class="text-lg text-default dark:text-slate-300">%%%BUILDING_STREET%%% %%%BUILDING_HOUSE_NUMBER%%%, %%%BUILDING_POSTAL_CODE%%% %%%BUILDING_CITY%%%</p>
+      </div>
+
+      <div class="rounded-lg overflow-hidden mx-auto mb-6" style="aspect-ratio: 16/9; max-width: 900px;">
+        <iframe
+          title="Location of %%%BUILDING_NAME%%%"
+          width="100%"
+          height="100%"
+          style="border: 0;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=%%%BUILDING_MAP_BBOX%%%&layer=mapnik&marker=%%%BUILDING_MAP_MARKER%%%"
+        ></iframe>
+      </div>
+
+      <div class="text-center">
+        <a
+          href="https://www.google.com/maps/dir/?api=1&destination=%%%BUILDING_STREET%%%+%%%BUILDING_HOUSE_NUMBER%%%,+%%%BUILDING_POSTAL_CODE%%%+%%%BUILDING_CITY%%%"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-primary font-semibold bg-primary text-white border-primary hover:bg-secondary hover:border-secondary px-6 py-3 rounded-full inline-block"
+        >
+          Plan Route
+        </a>
+      </div>
+      <!-- %%%ANREISE_MAP_EN_END%%% -->
+    </div>
+  </section>
+
+  <!-- FAQs Widget ******************* -->
+
+  {/* %%%FAQ_ITEMS_EN_START%%% */}
+  <FAQs
+    title="Frequently Asked Questions"
+    subtitle="Here you will find answers to the most important questions about your stay at %%%BUILDING_NAME%%%."
+    tagline="FAQ"
+    classes={{ container: 'max-w-6xl' }}
+    items={[
+      /* %%%FAQ_CHECKIN_EN_START%%% */
+      {
+        title: 'When is check-in and check-out?',
+        description:
+          'Check-in is possible between 4:00 PM and 10:00 PM, check-out between 7:00 AM and 11:00 AM. Different times can be arranged upon request.',
+      },
+      /* %%%FAQ_CHECKIN_EN_END%%% */
+      {
+        title: 'Is parking available?',
+        description:
+          'Yes, free parking spaces are available directly at the house.',
+      },
+      {
+        title: 'Are pets allowed?',
+        description:
+          'Please contact us in advance if you would like to bring a pet. We will certainly find a solution.',
+      },
+      {
+        title: 'How far is it to Lake Chiemsee?',
+        description:
+          'Lake Chiemsee is approximately 15 minutes away by car. The Kampenwand cable car and the center of Aschau are also quickly reachable.',
+      },
+      {
+        title: 'Are children welcome?',
+        description:
+          'Of course! A crib and an extra bed are available on request. Please let us know when booking if you need one.',
+      },
+      {
+        title: 'How can I book?',
+        description:
+          'Simply send us an inquiry via our contact form or by email to %%%HOST_EMAIL%%%. We will get back to you as soon as possible.',
+      },
+    ]}
+  />
+  {/* %%%FAQ_ITEMS_EN_END%%% */}
+
+  <!-- CallToAction Widget *********** -->
+
+  <CallToAction
+    actions={[
+      {
+        variant: 'secondary',
+        text: 'Booking Request',
+        href: '/en/contact',
+        icon: 'tabler:mail',
+      },
+    ]}
+  >
+    <Fragment slot="title">
+      Your %%%BUILDING_CITY%%%&nbsp;<br class="block sm:hidden" /><span class="sm:whitespace-nowrap">Holiday Awaits</span>
+    </Fragment>
+
+    <Fragment slot="subtitle">
+      Secure your preferred dates at %%%BUILDING_NAME%%%. <br class="hidden md:inline" />
+      We look forward to your inquiry!
+    </Fragment>
+
+    <Fragment slot="bg">
+      <div class="absolute inset-0 bg-blue-100 dark:bg-slate-800"></div>
+    </Fragment>
+  </CallToAction>
+</Layout>
