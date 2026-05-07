@@ -1,6 +1,6 @@
 site:
-  name: '%%%BUILDING_NAME%%%'
-  site: 'http://localhost:4326'
+  name: 'Musterhaus Sonnenschein'
+  site: 'https://fewo-test-640065.pages.dev'
   base: '/'
   trailingSlash: false
 
@@ -9,14 +9,14 @@ site:
 # Default SEO metadata
 metadata:
   title:
-    default: '%%%BUILDING_NAME%%% – Ferienwohnungen in %%%BUILDING_CITY%%%'
-    template: '%s — %%%BUILDING_NAME%%%'
+    default: 'Musterhaus Sonnenschein – Ferienwohnungen in Aschau im Chiemgau'
+    template: '%s — Musterhaus Sonnenschein'
   description: 'Ferienwohnungen im alpinen Landhaus am Fuße der Chiemgauer Alpen. Ankommen. Durchatmen. Genießen.'
   robots:
     index: true
     follow: true
   openGraph:
-    site_name: '%%%BUILDING_NAME%%%'
+    site_name: 'Musterhaus Sonnenschein'
     images:
       - url: '~/assets/images/default.png'
         width: 1200

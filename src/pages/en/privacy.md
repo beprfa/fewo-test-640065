@@ -7,11 +7,11 @@ _Last updated: February 2026_
 
 ## 1. Data Controller
 
-%%%HOST_NAME%%%
-%%%BUILDING_STREET%%% %%%BUILDING_HOUSE_NUMBER%%%
-%%%BUILDING_POSTAL_CODE%%% %%%BUILDING_CITY%%%
+Nicole Neckermann
+Bergstraße 7
+83229 Aschau im Chiemgau
 Germany
-Email: %%%HOST_EMAIL%%%
+Email: nicole.neckermann@icloud.com
 
 ## 2. Collection of Personal Data
 
@@ -49,7 +49,7 @@ Under the GDPR, you have the following rights regarding your personal data:
 - **Objection** (Art. 21 GDPR) — You may object to the processing of your data.
 - **Withdrawal of Consent** (Art. 7(3) GDPR) — Where processing is based on your consent, you may withdraw it at any time. The lawfulness of processing carried out prior to withdrawal remains unaffected.
 
-To exercise your rights, write to %%%HOST_EMAIL%%%.
+To exercise your rights, write to nicole.neckermann@icloud.com.
 
 ## 7. Right to Complain
 

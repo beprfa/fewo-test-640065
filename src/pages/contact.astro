@@ -10,22 +10,18 @@ const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
 const minDate = tomorrow.toISOString().split('T')[0];
 
-// %%%BOOKING_CONDITIONS_DE_START%%%
-// BFW-491: service-derived items (Babybett, Haustiere, Kurtaxe…) moved to the per-apartment
-// price-overview block above the Konditionen cards. Only globally applicable conditions remain here.
 const terms = [
-  { title: 'Anzahlung', description: '20% nach Buchungsbestätigung. Restzahlung 2 Tage vor Anreise.' },
-  { title: 'Stornierung', description: 'Kostenlos bis 1 Tag vor Anreise. Danach 100% des Preises.' },
-  { title: 'Check-in', description: '16:00 – 22:00 Uhr (andere Zeiten nach Absprache)' },
-  { title: 'Check-out', description: '07:00 – 11:00 Uhr (andere Zeiten nach Absprache)' },
-  { title: 'Schlüsselübergabe', description: 'Per Schlüsselbox. Code wird vor Anreise mitgeteilt.' },
-  { title: 'Parken', description: 'Kostenlos' },
+  { title: 'Anzahlung', description: 'Eine Anzahlung von 30% des Gesamtbetrags ist innerhalb von 7 Tagen nach Buchungsbestätigung fällig.' },
+  { title: 'Stornierung', description: 'Kostenlose Stornierung bis 30 Tage vor Anreise. Danach werden 50% des Gesamtbetrags berechnet.' },
+  { title: 'Check-in', description: '15:00 – 18:00 Uhr (andere Zeiten nach Absprache)' },
+  { title: 'Check-out', description: '08:00 – 10:00 Uhr (andere Zeiten nach Absprache)' },
+  { title: 'Schlüsselübergabe', description: 'Die Schlüsselübergabe erfolgt persönlich vor Ort. Bitte melden Sie sich 30 Minuten vor Anreise telefonisch.' },
+  { title: 'Parken', description: 'Ein kostenloser Parkplatz steht direkt am Haus zur Verfügung.' },
 ];
-// %%%BOOKING_CONDITIONS_DE_END%%%
 ---
 
 <!-- BFW-351: same window globals the calendar widget reads. -->
-<script is:inline define:vars={{ tenantSlug: '%%%TENANT_SLUG%%%', apiBase: '%%%PUBLIC_API_BASE_URL%%%' }}>
+<script is:inline define:vars={{ tenantSlug: '640065', apiBase: 'http://localhost:9080' }}>
   window.MFWS_TENANT_SLUG = tenantSlug;
   window.MFWS_PUBLIC_API_BASE_URL = apiBase;
 </script>
@@ -47,34 +43,24 @@ const terms = [
            with base price, surcharge (if any), and every additional service with its calculation type
            and (Pflicht|optional) flag. -->
       <div class="space-y-4 mb-6">
-        <!-- %%%PRICE_OVERVIEW_DE_START%%% -->
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
-          <h4 class="text-lg font-semibold mb-3 dark:text-white">Alpenpanorama</h4>
-          <dl class="space-y-2 text-sm">
-            <div class="flex justify-between gap-4">
-              <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
-              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">60 €</dd>
-            </div>
-            <div class="flex justify-between gap-4">
-              <dt class="text-default dark:text-slate-300">Aufschlag pro Zusatzperson</dt>
-              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">75 €</dd>
-            </div>
-          </dl>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
-          <h4 class="text-lg font-semibold mb-3 dark:text-white">Bergwiese</h4>
-          <dl class="space-y-2 text-sm">
-            <div class="flex justify-between gap-4">
-              <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
-              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">45 €</dd>
-            </div>
-            <div class="flex justify-between gap-4">
-              <dt class="text-default dark:text-slate-300">Aufschlag pro Zusatzperson</dt>
-              <dd class="text-muted dark:text-slate-400 whitespace-nowrap">60 €</dd>
-            </div>
-          </dl>
-        </div>
-        <!-- %%%PRICE_OVERVIEW_DE_END%%% -->
+      <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
+        <h4 class="text-lg font-semibold mb-3 dark:text-white">Alpenpanorama</h4>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">75 €</dd>
+          </div>
+        </dl>
+      </div>
+      <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
+        <h4 class="text-lg font-semibold mb-3 dark:text-white">Bergwiese</h4>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">60 €</dd>
+          </div>
+        </dl>
+      </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,10 +114,8 @@ const terms = [
             <label for="apartment" class="block text-sm font-medium mb-1 dark:text-white">Wohnung *</label>
             <select id="apartment" name="apartment" required class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
               <option value="">Bitte wählen...</option>
-              <!-- %%%APARTMENT_OPTIONS_DE_START%%% -->
               <option value="alpenpanorama">Alpenpanorama</option>
               <option value="bergwiese">Bergwiese</option>
-              <!-- %%%APARTMENT_OPTIONS_DE_END%%% -->
             </select>
           </div>
 
@@ -148,18 +132,8 @@ const terms = [
 
           <!-- BFW-467/486: per-apartment additional services blocks (shown/hidden by JS on apartment change). -->
           <!-- Backend renders one <div id="services-<slug>" class="hidden">…</div> per apartment, concatenated. -->
-          <!-- %%%ADDITIONAL_SERVICES_DE_START%%% -->
-          <div id="services-alpenpanorama" class="hidden">
-            <p class="block text-sm font-medium mb-2 dark:text-white">Zusatzleistungen</p>
-            <div class="bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-2">
-              <label class="flex items-start gap-2 py-2 border-b border-primary/10 last:border-b-0 cursor-pointer">
-                <input type="checkbox" checked disabled data-service-id="1" data-calc-type="ONCE" data-amount="30" class="mt-0.5 accent-primary service-checkbox" />
-                <span class="flex-1 text-sm text-default dark:text-white">Endreinigung <span class="text-xs text-muted italic">(Pflichtleistung)</span></span>
-                <span class="text-sm text-muted dark:text-slate-400 whitespace-nowrap">30 € (einmalig)</span>
-              </label>
-            </div>
-          </div>
-          <!-- %%%ADDITIONAL_SERVICES_DE_END%%% -->
+
+
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -214,14 +188,6 @@ const terms = [
 
           <!-- BFW-492: AGB checkbox (only rendered when tenant has eigeneAgb=true and non-blank agbText). -->
           <!-- The block is collapsed by WebsiteContentReplacer when the marker value is empty. -->
-          <!-- %%%AGB_CHECKBOX_DE_START%%% -->
-          <div class="flex items-start gap-2">
-            <input type="checkbox" id="agb" name="agb" required class="mt-1" />
-            <label for="agb" class="text-sm text-muted dark:text-slate-400">
-              Ich stimme den <a href="/agb" class="text-primary hover:underline">Allgemeinen Geschäftsbedingungen</a> zu. *
-            </label>
-          </div>
-          <!-- %%%AGB_CHECKBOX_DE_END%%% -->
 
           <!-- BFW-351 honeypot: must stay empty. Real users never see / fill this. -->
           <div aria-hidden="true" style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;">

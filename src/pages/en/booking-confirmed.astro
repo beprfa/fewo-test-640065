@@ -7,7 +7,7 @@ const metadata = { title: 'Booking request' };
 ---
 
 <!-- BFW-374: expose API base URL for the resend script. -->
-<script is:inline define:vars={{ apiBase: '%%%PUBLIC_API_BASE_URL%%%' }}>
+<script is:inline define:vars={{ apiBase: 'http://localhost:9080' }}>
   window.MFWS_PUBLIC_API_BASE_URL = apiBase;
 </script>
 

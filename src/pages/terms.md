@@ -5,20 +5,20 @@ layout: '~/layouts/MarkdownLayout.astro'
 
 ## Angaben gemäß § 5 TMG
 
-%%%HOST_NAME%%%
-%%%BUILDING_STREET%%% %%%BUILDING_HOUSE_NUMBER%%%
-%%%BUILDING_POSTAL_CODE%%% %%%BUILDING_CITY%%%
+Nicole Neckermann
+Bergstraße 7
+83229 Aschau im Chiemgau
 Deutschland
 
 ## Kontakt
 
-E-Mail: %%%HOST_EMAIL%%%
+E-Mail: nicole.neckermann@icloud.com
 
 ## Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV
 
-%%%HOST_NAME%%%
-%%%BUILDING_STREET%%% %%%BUILDING_HOUSE_NUMBER%%%
-%%%BUILDING_POSTAL_CODE%%% %%%BUILDING_CITY%%%
+Nicole Neckermann
+Bergstraße 7
+83229 Aschau im Chiemgau
 Deutschland
 
 ## Hinweis
