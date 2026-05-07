@@ -63,12 +63,20 @@ const todayLabel = isEn ? 'Today' : 'Heute';
 
   // Per-tenant cache: avoids one fetch per calendar widget on the same page.
   // window.__bookingsCache is shared across all calendars for a single page load.
+  // BFW-532: MFWS_INITIAL_BOOKINGS is the publish-time snapshot used as the
+  // baseline so the calendar renders booked/reserved cells even when the runtime
+  // fetch is blocked (Chrome PNA on localhost, mixed content, offline).
   declare global {
     interface Window {
       __bookingsCache?: Promise<PublicBooking[]>;
       MFWS_TENANT_SLUG?: string;
       MFWS_PUBLIC_API_BASE_URL?: string;
+      MFWS_INITIAL_BOOKINGS?: PublicBooking[];
     }
+  }
+
+  function initialBookings(): PublicBooking[] {
+    return Array.isArray(window.MFWS_INITIAL_BOOKINGS) ? window.MFWS_INITIAL_BOOKINGS : [];
   }
 
   function fetchBookings(): Promise<PublicBooking[]> {
@@ -77,7 +85,7 @@ const todayLabel = isEn ? 'Today' : 'Heute';
     const base = window.MFWS_PUBLIC_API_BASE_URL;
     if (!slug || !base) {
       // Markers not replaced — local dev or template misconfiguration.
-      return Promise.resolve([]);
+      return Promise.resolve(initialBookings());
     }
     window.__bookingsCache = fetch(`${base}/api/public/tenants/${slug}/bookings`, {
       headers: { Accept: 'application/json' },
@@ -87,9 +95,10 @@ const todayLabel = isEn ? 'Today' : 'Heute';
         return res.json() as Promise<PublicBooking[]>;
       })
       .catch(() => {
-        // Reset the cache so a later page load can retry.
+        // BFW-532: reset the cache so a later page load can retry, and fall back
+        // to the publish-time snapshot so the calendar still shows booked cells.
         window.__bookingsCache = undefined;
-        return [];
+        return initialBookings();
       });
     return window.__bookingsCache;
   }
@@ -118,8 +127,9 @@ const todayLabel = isEn ? 'Today' : 'Heute';
       const today = new Date();
       let currentMonth = today.getMonth();
       let currentYear = today.getFullYear();
-      let bookings: PublicBooking[] = [];
-      let didLoad = false;
+      // BFW-532: seed with the publish-time snapshot so cells colour in on first paint.
+      let bookings: PublicBooking[] = initialBookings();
+      let didLoad = bookings.length > 0;
 
       type DayState = 'free' | 'reserved' | 'booked';
       function dayState(dateStr: string): DayState {
