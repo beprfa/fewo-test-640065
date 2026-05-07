@@ -14,7 +14,7 @@ const terms = [
   { title: 'Deposit', description: 'Eine Anzahlung von 30% des Gesamtbetrags ist innerhalb von 7 Tagen nach Buchungsbestätigung fällig.' },
   { title: 'Cancellation', description: 'Kostenlose Stornierung bis 30 Tage vor Anreise. Danach werden 50% des Gesamtbetrags berechnet.' },
   { title: 'Check-in', description: '3:00 PM – 6:00 PM (other times by arrangement)' },
-  { title: 'Check-out', description: '8:00 AM – 10:00 AM (other times by arrangement)' },
+  { title: 'Check-out', description: '8:00 AM – 12:00 PM (other times by arrangement)' },
   { title: 'Key handover', description: 'Die Schlüsselübergabe erfolgt persönlich vor Ort. Bitte melden Sie sich 30 Minuten vor Anreise telefonisch.' },
   { title: 'Parking', description: 'Ein kostenloser Parkplatz steht direkt am Haus zur Verfügung.' },
 ];
@@ -44,20 +44,28 @@ const terms = [
            and (required|optional) flag. -->
       <div class="space-y-4 mb-6">
       <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
-        <h4 class="text-lg font-semibold mb-3 dark:text-white">Alpenpanorama</h4>
+        <h4 class="text-lg font-semibold mb-3 dark:text-white">Alpenblick</h4>
         <dl class="space-y-2 text-sm">
           <div class="flex justify-between gap-4">
             <dt class="text-default dark:text-slate-300">Base price/night (1-2 pers.)</dt>
             <dd class="text-muted dark:text-slate-400 whitespace-nowrap">75 €</dd>
           </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Surcharge per extra person</dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">50 €</dd>
+          </div>
         </dl>
       </div>
       <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
-        <h4 class="text-lg font-semibold mb-3 dark:text-white">Bergwiese</h4>
+        <h4 class="text-lg font-semibold mb-3 dark:text-white">Bergblick</h4>
         <dl class="space-y-2 text-sm">
           <div class="flex justify-between gap-4">
             <dt class="text-default dark:text-slate-300">Base price/night (1-2 pers.)</dt>
             <dd class="text-muted dark:text-slate-400 whitespace-nowrap">60 €</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Surcharge per extra person</dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">30 €</dd>
           </div>
         </dl>
       </div>
@@ -114,8 +122,8 @@ const terms = [
             <label for="apartment" class="block text-sm font-medium mb-1 dark:text-white">Apartment *</label>
             <select id="apartment" name="apartment" required class="w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary">
               <option value="">Please select...</option>
-              <option value="alpenpanorama">Alpenpanorama</option>
-              <option value="bergwiese">Bergwiese</option>
+              <option value="alpenblick">Alpenblick</option>
+              <option value="bergblick">Bergblick</option>
             </select>
           </div>
 
@@ -188,6 +196,12 @@ const terms = [
 
           <!-- BFW-492: AGB checkbox (only rendered when tenant has eigeneAgb=true and non-blank agbText). -->
           <!-- The block is collapsed by WebsiteContentReplacer when the marker value is empty. -->
+          <div class="flex items-start gap-2">
+            <input type="checkbox" id="agb" name="agb" required class="mt-1" />
+            <label for="agb" class="text-sm text-muted dark:text-slate-400">
+              I agree to the <a href="/en/agb" class="text-primary hover:underline">Terms and Conditions</a> . *
+            </label>
+          </div>
 
           <div class="rounded-lg bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 p-4 text-sm text-default dark:text-slate-200">
             <p class="font-semibold mb-1">Non-binding inquiry — not a confirmed booking</p>
