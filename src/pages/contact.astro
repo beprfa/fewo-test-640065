@@ -85,6 +85,27 @@ const terms = [
           </div>
         </dl>
       </div>
+      <div class="bg-white dark:bg-slate-800 p-5 rounded-lg border border-gray-200 dark:border-slate-700">
+        <h4 class="text-lg font-semibold mb-3 dark:text-white">Enzian</h4>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Grundpreis/Nacht (1-2 Pers.)</dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">100 €</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Aufschlag pro Zusatzperson</dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">50 €</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Endreinigung <span class="text-xs text-muted italic">(Pflicht)</span></dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">40 € (einmalig)</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-default dark:text-slate-300">Babybett <span class="text-xs text-muted italic">(optional)</span><span class="block text-xs text-muted italic mt-0.5">bis 4 Jahre</span></dt>
+            <dd class="text-muted dark:text-slate-400 whitespace-nowrap">15 € (pro Nacht)</dd>
+          </div>
+        </dl>
+      </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,6 +161,7 @@ const terms = [
               <option value="">Bitte wählen...</option>
               <option value="alpenblick">Alpenblick</option>
               <option value="bergblick">Bergblick</option>
+              <option value="enzian">Enzian</option>
             </select>
           </div>
 
@@ -199,6 +221,29 @@ const terms = [
               class="mt-0.5 accent-primary service-checkbox" />
             <span class="flex-1 text-sm text-default dark:text-white">Babybett<span class="block text-xs text-muted-foreground italic mt-1">bis 4 Jahre</span></span>
             <span class="text-sm text-muted dark:text-slate-400 whitespace-nowrap">20 € (pro Nacht)</span>
+          </label>
+        </div>
+      </div>
+      <div id="services-enzian" class="hidden mb-8">
+        <h4 class="text-lg font-semibold mb-3 dark:text-white">Zusatzleistungen</h4>
+        <div class="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 px-4">
+          <label class="flex items-start gap-2 py-2 border-b border-primary/10 last:border-b-0 cursor-pointer">
+            <input type="checkbox" checked disabled
+              data-service-id="38"
+              data-calc-type="ONCE"
+              data-amount="40"
+              class="mt-0.5 accent-primary service-checkbox" />
+            <span class="flex-1 text-sm text-default dark:text-white">Endreinigung <span class="text-xs text-muted italic">(Pflichtleistung)</span></span>
+            <span class="text-sm text-muted dark:text-slate-400 whitespace-nowrap">40 € (einmalig)</span>
+          </label>
+          <label class="flex items-start gap-2 py-2 border-b border-primary/10 last:border-b-0 cursor-pointer">
+            <input type="checkbox"
+              data-service-id="39"
+              data-calc-type="PER_NIGHT"
+              data-amount="15"
+              class="mt-0.5 accent-primary service-checkbox" />
+            <span class="flex-1 text-sm text-default dark:text-white">Babybett<span class="block text-xs text-muted-foreground italic mt-1">bis 4 Jahre</span></span>
+            <span class="text-sm text-muted dark:text-slate-400 whitespace-nowrap">15 € (pro Nacht)</span>
           </label>
         </div>
       </div>
