@@ -92,7 +92,7 @@ const metadata = {
 <!-- BFW-352: tenant slug + public API base URL for the AvailabilityCalendar widget.
      BFW-532: bookings snapshot embedded so the calendar renders from static HTML
      even when the runtime fetch is blocked (Chrome PNA, mixed content, offline). -->
-<script is:inline define:vars={{ tenantSlug: '640065', apiBase: 'http://localhost:9080', bookingsRaw: '[{"apartmentSlug":"alpenblick","startDate":"2026-06-12","endDate":"2026-06-22","status":"BOOKED"},{"apartmentSlug":"alpenblick","startDate":"2026-05-28","endDate":"2026-06-11","status":"BOOKED"},{"apartmentSlug":"alpenblick","startDate":"2026-05-15","endDate":"2026-05-27","status":"BOOKED"},{"apartmentSlug":"alpenblick","startDate":"2026-05-11","endDate":"2026-05-14","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-29","endDate":"2026-06-06","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-18","endDate":"2026-05-28","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-15","endDate":"2026-05-17","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-04","endDate":"2026-05-10","status":"BOOKED"}]' }}>
+<script is:inline define:vars={{ tenantSlug: '640065', apiBase: 'http://localhost:9080', bookingsRaw: '[{"apartmentSlug":"alpenblick","startDate":"2026-06-12","endDate":"2026-06-22","status":"BOOKED"},{"apartmentSlug":"alpenblick","startDate":"2026-05-28","endDate":"2026-06-11","status":"BOOKED"},{"apartmentSlug":"alpenblick","startDate":"2026-05-15","endDate":"2026-05-27","status":"BOOKED"},{"apartmentSlug":"alpenblick","startDate":"2026-05-11","endDate":"2026-05-14","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-29","endDate":"2026-06-06","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-18","endDate":"2026-05-28","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-15","endDate":"2026-05-17","status":"BOOKED"},{"apartmentSlug":"bergblick","startDate":"2026-05-04","endDate":"2026-05-10","status":"BOOKED"},{"apartmentSlug":"enzian","startDate":"2026-05-22","endDate":"2026-05-24","status":"BOOKED"},{"apartmentSlug":"enzian","startDate":"2026-05-27","endDate":"2026-05-29","status":"BOOKED"}]' }}>
   window.MFWS_TENANT_SLUG = tenantSlug;
   window.MFWS_PUBLIC_API_BASE_URL = apiBase;
   try {
@@ -192,16 +192,23 @@ const metadata = {
 
   var APARTMENT_SLUG = 'alpenblick';
   var CONTACT_PATH = '/en/contact';
+  var ERR_MIN_STAY = 'Minimum 1 night';
+  var ERR_PAST_DATE = 'Please choose a future date';
 
-  function todayStr() {
-    var d = new Date();
-    return d.toISOString().split('T')[0];
+  // BFW-564: build YYYY-MM-DD strings from local-time components so the picker
+  // and validation stay correct in any timezone. The previous version that
+  // used UTC conversion was off by one day in UTC+N timezones.
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function localIso(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
-
+  function todayStr() {
+    return localIso(new Date());
+  }
   function dayAfter(isoDate) {
     var d = new Date(isoDate + 'T00:00:00');
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return localIso(d);
   }
 
   function datesValid() {
@@ -210,21 +217,36 @@ const metadata = {
     return !!ci && !!co && co > ci && ci >= todayStr();
   }
 
-  function showDateError(show) {
+  function showDateError(message) {
     if (!dateError) return;
-    if (show) dateError.classList.remove('hidden');
-    else dateError.classList.add('hidden');
+    if (message) {
+      dateError.textContent = message;
+      dateError.classList.remove('hidden');
+    } else {
+      dateError.classList.add('hidden');
+    }
   }
 
   function updateButtonState() {
     if (ctaButton) ctaButton.disabled = !datesValid();
   }
 
+  // BFW-564: Pick a specific error message so the user understands why the
+  // button is disabled. Past-date check beats the min-stay check because a
+  // past date is the more obvious error.
   function refreshErrorAndButton() {
+    var today = todayStr();
     var ci = checkinInput ? checkinInput.value : '';
     var co = checkoutInput ? checkoutInput.value : '';
-    // Show "min 1 night" error only when both dates are picked AND departure ≤ arrival.
-    showDateError(!!ci && !!co && co <= ci);
+    var ciPast = !!ci && ci < today;
+    var coPast = !!co && co < today;
+    if (ciPast || coPast) {
+      showDateError(ERR_PAST_DATE);
+    } else if (!!ci && !!co && co <= ci) {
+      showDateError(ERR_MIN_STAY);
+    } else {
+      showDateError('');
+    }
     updateButtonState();
   }
 
@@ -312,16 +334,23 @@ const metadata = {
 
   var APARTMENT_SLUG = 'bergblick';
   var CONTACT_PATH = '/en/contact';
+  var ERR_MIN_STAY = 'Minimum 1 night';
+  var ERR_PAST_DATE = 'Please choose a future date';
 
-  function todayStr() {
-    var d = new Date();
-    return d.toISOString().split('T')[0];
+  // BFW-564: build YYYY-MM-DD strings from local-time components so the picker
+  // and validation stay correct in any timezone. The previous version that
+  // used UTC conversion was off by one day in UTC+N timezones.
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function localIso(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
-
+  function todayStr() {
+    return localIso(new Date());
+  }
   function dayAfter(isoDate) {
     var d = new Date(isoDate + 'T00:00:00');
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return localIso(d);
   }
 
   function datesValid() {
@@ -330,21 +359,36 @@ const metadata = {
     return !!ci && !!co && co > ci && ci >= todayStr();
   }
 
-  function showDateError(show) {
+  function showDateError(message) {
     if (!dateError) return;
-    if (show) dateError.classList.remove('hidden');
-    else dateError.classList.add('hidden');
+    if (message) {
+      dateError.textContent = message;
+      dateError.classList.remove('hidden');
+    } else {
+      dateError.classList.add('hidden');
+    }
   }
 
   function updateButtonState() {
     if (ctaButton) ctaButton.disabled = !datesValid();
   }
 
+  // BFW-564: Pick a specific error message so the user understands why the
+  // button is disabled. Past-date check beats the min-stay check because a
+  // past date is the more obvious error.
   function refreshErrorAndButton() {
+    var today = todayStr();
     var ci = checkinInput ? checkinInput.value : '';
     var co = checkoutInput ? checkoutInput.value : '';
-    // Show "min 1 night" error only when both dates are picked AND departure ≤ arrival.
-    showDateError(!!ci && !!co && co <= ci);
+    var ciPast = !!ci && ci < today;
+    var coPast = !!co && co < today;
+    if (ciPast || coPast) {
+      showDateError(ERR_PAST_DATE);
+    } else if (!!ci && !!co && co <= ci) {
+      showDateError(ERR_MIN_STAY);
+    } else {
+      showDateError('');
+    }
     updateButtonState();
   }
 
@@ -429,16 +473,23 @@ const metadata = {
 
   var APARTMENT_SLUG = 'enzian';
   var CONTACT_PATH = '/en/contact';
+  var ERR_MIN_STAY = 'Minimum 1 night';
+  var ERR_PAST_DATE = 'Please choose a future date';
 
-  function todayStr() {
-    var d = new Date();
-    return d.toISOString().split('T')[0];
+  // BFW-564: build YYYY-MM-DD strings from local-time components so the picker
+  // and validation stay correct in any timezone. The previous version that
+  // used UTC conversion was off by one day in UTC+N timezones.
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function localIso(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
-
+  function todayStr() {
+    return localIso(new Date());
+  }
   function dayAfter(isoDate) {
     var d = new Date(isoDate + 'T00:00:00');
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return localIso(d);
   }
 
   function datesValid() {
@@ -447,21 +498,36 @@ const metadata = {
     return !!ci && !!co && co > ci && ci >= todayStr();
   }
 
-  function showDateError(show) {
+  function showDateError(message) {
     if (!dateError) return;
-    if (show) dateError.classList.remove('hidden');
-    else dateError.classList.add('hidden');
+    if (message) {
+      dateError.textContent = message;
+      dateError.classList.remove('hidden');
+    } else {
+      dateError.classList.add('hidden');
+    }
   }
 
   function updateButtonState() {
     if (ctaButton) ctaButton.disabled = !datesValid();
   }
 
+  // BFW-564: Pick a specific error message so the user understands why the
+  // button is disabled. Past-date check beats the min-stay check because a
+  // past date is the more obvious error.
   function refreshErrorAndButton() {
+    var today = todayStr();
     var ci = checkinInput ? checkinInput.value : '';
     var co = checkoutInput ? checkoutInput.value : '';
-    // Show "min 1 night" error only when both dates are picked AND departure ≤ arrival.
-    showDateError(!!ci && !!co && co <= ci);
+    var ciPast = !!ci && ci < today;
+    var coPast = !!co && co < today;
+    if (ciPast || coPast) {
+      showDateError(ERR_PAST_DATE);
+    } else if (!!ci && !!co && co <= ci) {
+      showDateError(ERR_MIN_STAY);
+    } else {
+      showDateError('');
+    }
     updateButtonState();
   }
 
